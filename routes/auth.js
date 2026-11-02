@@ -7,23 +7,28 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
     try {
         const { username, password } = req.body;
+        
         if (!username || !password) {
-            return res.status(400).json("Bad Request: email & password are required!")
+            return res.status(400).json({ message: "Username and password are required!" });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const db = accessDB();
-        const result = await db.collection("users").insertOne({ email, password: hashedPassword });
+        if (!db) {
+            return res.status(500).json({ error: "Database connection is not initialized" });
+        }
 
-        console.log();
+        const result = await db.collection("users").insertOne({ 
+            username, 
+            password: hashedPassword 
+        });
         
-        res.status(201).json(result);
+        return res.status(201).json(result);
 
     } catch (error) {
-        res.status(500).send("Registration failed!");
+        return res.status(500).json({ error: "Registration failed!" });
     }
-
 });
 
 router.post("/login", (req, res) => {
